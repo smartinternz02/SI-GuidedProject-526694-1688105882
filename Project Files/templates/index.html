@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="{{ url_for('static_css', path='main.css') }}" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+<body>
+    <div class="bg">
+        
+    </div>
+
+    <main class="form-signin">
+        <h1 class="h3">Automatic Number Plate Recognition</h1>
+        <img src="{{ url_for('static', filename='Comp_1.gif') }}" alt="GIF Image" style="mix-blend-mode: screen; height: 450px;">
+        <form id="uploadForm">
+            <div class="form-floating">
+                <input type="url" class="form-control" id="imageURL" placeholder="Enter image URL">
+                <label for="imageURL">Enter Image URL</label>
+            </div>
+            <button class="btn btn-lg" type="submit" style="background-color: #59adce; margin-top: 10px;">Check</button>
+        </form>
+        <div id="imageContainer" class="input_img" style="margin-top:10px"></div>
+        <div class="form-floating">
+            <textarea id="output" rows="4" readonly></textarea>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent form submission
+    
+            var imageURL = document.getElementById('imageURL');
+            var output = document.getElementById('output');
+            var imageContainer = document.getElementById('imageContainer');
+    
+            var formData = new FormData();
+            formData.append('imageURL', imageURL.value);
+    
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/process', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                    var response = JSON.parse(xhr.responseText);
+                    if ('plate' in response && 'confidence' in response) {
+                        var plate = response.plate;
+                        var confidence = response.confidence;
+                        output.value = 'Detected license plate: ' + plate + '\nConfidence: ' + confidence;
+                    } else if ('error' in response) {
+                        output.value = 'Error: ' + response.error;
+                    } else {
+                        output.value = 'No response received.';
+                    }
+                    
+                    // Display the image in imageContainer
+                    var img = document.createElement('img');
+                    img.src = imageURL.value;
+                    img.style.height = '150px';
+                    imageContainer.innerHTML = ''; // Clear existing content
+                    imageContainer.appendChild(img); // Append the image
+                } else {
+                    output.value = 'Error occurred while processing the image.';
+                }
+            };
+    
+            xhr.send(new URLSearchParams(formData));
+            output.value = 'Processing image...';
+        });
+    </script>
+        
+</body>
+</html>
